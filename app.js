@@ -1,8 +1,8 @@
 // ============================
 // 🔑 ตั้งค่า Supabase ของคุณตรงนี้
 // ============================
-const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
+const SUPABASE_URL = "https://onjvnijtotxnnecxfgvk.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_QihvN4zm6Fwq-lso7UZH7g_fqgXnLnt";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
