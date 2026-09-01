@@ -1,5 +1,5 @@
-const SUPABASE_URL = "ใส่ URL ของคุณ";
-const SUPABASE_KEY = "ใส่ anon key ของคุณ";
+const SUPABASE_URL = "https://onjvnijtotxnnecxfgvk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QihvN4zm6Fwq-lso7UZH7g_fqgXnLnt";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
