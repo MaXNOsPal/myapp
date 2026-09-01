@@ -1,22 +1,60 @@
-const SUPABASE_URL = "https://onjvnijtotxnnecxfgvk.supabase.co";
-const SUPABASE_KEY = "sb_publishable_QihvN4zm6Fwq-lso7UZH7g_fqgXnLnt";
-
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function sendOtp() {
-  const email = document.getElementById("email").value.trim();
-  const msg = document.getElementById("msg");
+const msg = document.getElementById("msg");
+const list = document.getElementById("list");
 
-  if (!email) {
-    msg.textContent = "กรุณากรอกอีเมล";
+// โหลดข้อมูลทั้งหมด
+async function loadItems() {
+  const { data, error } = await sb
+    .from("items")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    msg.textContent = "โหลดไม่สำเร็จ: " + error.message;
     return;
   }
 
-  msg.textContent = "กำลังส่ง...";
-
-  const { error } = await sb.auth.signInWithOtp({ email });
-
-  msg.textContent = error ? "ผิดพลาด: " + error.message : "ส่งรหัสไปที่อีเมลแล้ว ✅";
+  list.innerHTML = data
+    .map(i => `<li>${i.name} — ${i.note ?? ""}
+      <button type="button" onclick="delItem(${i.id})">ลบ</button></li>`)
+    .join("");
 }
 
-window.sendOtp = sendOtp;
+// เพิ่มข้อมูล
+async function addItem() {
+  const name = document.getElementById("name").value.trim();
+  const note = document.getElementById("note").value.trim();
+
+  if (!name) {
+    msg.textContent = "กรุณากรอกชื่อ";
+    return;
+  }
+
+  const { error } = await sb.from("items").insert({ name, note });
+
+  if (error) {
+    msg.textContent = "บันทึกไม่สำเร็จ: " + error.message;
+    return;
+  }
+
+  document.getElementById("name").value = "";
+  document.getElementById("note").value = "";
+  msg.textContent = "บันทึกแล้ว ✅";
+  loadItems();
+}
+
+// ลบข้อมูล
+async function delItem(id) {
+  const { error } = await sb.from("items").delete().eq("id", id);
+  if (error) {
+    msg.textContent = "ลบไม่สำเร็จ: " + error.message;
+    return;
+  }
+  loadItems();
+}
+
+window.addItem = addItem;
+window.delItem = delItem;
+
+loadItems();
