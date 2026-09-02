@@ -1,21 +1,292 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>บันทึกรายรับรายจ่าย</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+    max-width: 440px; margin: 0 auto; padding: 16px 16px 40px;
+    background: #f1f5f9; color: #0f172a;
+  }
+  h1 { font-size: 20px; text-align: center; margin: 4px 0 14px; }
+
+  /* สรุปยอด */
+  .summary { background: #1e293b; color: #fff; border-radius: 16px; padding: 20px; text-align: center; }
+  .summary .label { font-size: 13px; opacity: .7; }
+  .balance { font-size: 34px; font-weight: 800; margin: 4px 0 12px; }
+  .sub { display: flex; justify-content: space-around; font-size: 14px; }
+  .sub b { display: block; font-size: 17px; margin-top: 2px; }
+  .in b { color: #4ade80; }
+  .out b { color: #f87171; }
+
+  /* แท็บ */
+  .tabs { display: flex; gap: 8px; margin: 16px 0 12px; }
+  .tabs button {
+    flex: 1; padding: 13px; border: none; border-radius: 12px;
+    background: #e2e8f0; color: #475569; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: .15s;
+  }
+  .tabs button.on { background: #334155; color: #fff; }
+  .tabs button.on.income { background: #16a34a; }
+
+  /* หมวดหมู่ */
+  .cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cats button {
+    padding: 15px 4px; border: 1.5px solid #e2e8f0; border-radius: 14px;
+    background: #fff; font-size: 13px; cursor: pointer; transition: .15s;
+  }
+  .cats button.on { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+  /* ช่องตัวเลข */
+  .amount {
+    text-align: right; font-size: 38px; font-weight: 800; letter-spacing: 1px;
+    margin: 14px 0 10px; padding: 12px 18px; background: #fff; border-radius: 14px;
+  }
+  .amount.zero { color: #cbd5e1; }
+  .amount span { font-size: 20px; color: #94a3b8; margin-left: 6px; }
+
+  /* ปุ่มกด */
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pad button {
+    padding: 18px; font-size: 22px; font-weight: 600; border: none;
+    border-radius: 14px; background: #fff; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .pad button:active { background: #dbeafe; transform: scale(.96); }
+  .pad .fn { color: #64748b; font-size: 19px; }
+
+  .save {
+    width: 100%; padding: 17px; margin-top: 12px; border: none; border-radius: 14px;
+    background: #16a34a; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer;
+  }
+  .save:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+  #msg { text-align: center; min-height: 20px; font-size: 14px; margin: 10px 0 0; }
+  #msg.err { color: #dc2626; }
+  #msg.ok  { color: #16a34a; }
+
+  /* รายการ */
+  .listHead { display: flex; justify-content: space-between; align-items: center; margin: 22px 0 10px; }
+  .listHead h2 { font-size: 16px; margin: 0; }
+  .listHead select { padding: 7px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; font-size: 13px; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; padding: 13px 14px; border-radius: 12px; margin-bottom: 8px;
+  }
+  li .cat { flex: 1; font-size: 15px; }
+  li .date { display: block; font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  li .amt { font-weight: 700; font-size: 15px; }
+  li .amt.in { color: #16a34a; }
+  li .amt.out { color: #dc2626; }
+  li .del { border: none; background: none; color: #cbd5e1; font-size: 19px; cursor: pointer; padding: 0 2px; }
+  li .del:active { color: #dc2626; }
+  .empty { text-align: center; color: #94a3b8; padding: 26px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>💸 บันทึกรายรับรายจ่าย</h1>
+
 <div class="summary">
+  <div class="label">คงเหลือ</div>
   <div class="balance" id="balance">0 ฿</div>
   <div class="sub">
-    <span class="in">รับ <b id="sumIn">0</b></span>
-    <span class="out">จ่าย <b id="sumOut">0</b></span>
+    <div class="in">รายรับ<b id="sumIn">0</b></div>
+    <div class="out">รายจ่าย<b id="sumOut">0</b></div>
   </div>
 </div>
 
 <div class="tabs">
-  <button id="tabOut" class="on">รายจ่าย</button>
-  <button id="tabIn">รายรับ</button>
+  <button id="tabOut" class="on">− รายจ่าย</button>
+  <button id="tabIn">+ รายรับ</button>
 </div>
 
-<div id="cats" class="cats"></div>
+<div class="cats" id="cats"></div>
 
-<div class="amount" id="amount">0</div>
+<div class="amount zero" id="amount">0<span>฿</span></div>
 <div class="pad" id="pad"></div>
 
-<button id="saveBtn" class="save" disabled>บันทึก</button>
+<button class="save" id="saveBtn" disabled>บันทึก</button>
 <p id="msg"></p>
+
+<div class="listHead">
+  <h2>รายการล่าสุด</h2>
+  <select id="filter">
+    <option value="month">เดือนนี้</option>
+    <option value="all">ทั้งหมด</option>
+  </select>
+</div>
 <ul id="list"></ul>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ═══ 1. ตั้งค่า — แก้ 2 บรรทัดนี้ ═══ */
+const SUPABASE_URL = "https://xxxxxxxx.supabase.co";
+const SUPABASE_KEY = "your-anon-public-key";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ═══ 2. หมวดหมู่ — แก้เพิ่มลบได้ตามใจ ═══ */
+const CATS = {
+  expense: ["🍜 อาหาร", "🚗 เดินทาง", "🛒 ของใช้", "🏠 ที่พัก", "🎮 บันเทิง", "💊 สุขภาพ", "📱 บิล", "🎓 การศึกษา", "📦 อื่นๆ"],
+  income:  ["💰 เงินเดือน", "🎁 โบนัส", "💵 ขายของ", "📈 ลงทุน", "🤝 รับโอน", "📦 อื่นๆ"]
+};
+
+/* ═══ 3. สถานะ ═══ */
+let type = "expense", cat = null, digits = "", cache = [];
+const $ = id => document.getElementById(id);
+const money = n => Number(n).toLocaleString("th-TH");
+
+/* ═══ 4. แท็บ ═══ */
+$("tabOut").onclick = () => setType("expense");
+$("tabIn").onclick  = () => setType("income");
+
+function setType(t) {
+  type = t; cat = null;
+  $("tabOut").className = t === "expense" ? "on" : "";
+  $("tabIn").className  = t === "income"  ? "on income" : "";
+  renderCats();
+  checkReady();
+}
+
+/* ═══ 5. ปุ่มหมวดหมู่ ═══ */
+function renderCats() {
+  const box = $("cats");
+  box.innerHTML = "";
+  CATS[type].forEach(c => {
+    const b = document.createElement("button");
+    b.textContent = c;
+    b.onclick = () => {
+      cat = c;
+      [...box.children].forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      checkReady();
+    };
+    box.appendChild(b);
+  });
+}
+
+/* ═══ 6. ปุ่มตัวเลข ═══ */
+["1","2","3","4","5","6","7","8","9","C","0","⌫"].forEach(k => {
+  const b = document.createElement("button");
+  b.textContent = k;
+  if (k === "C" || k === "⌫") b.className = "fn";
+  b.onclick = () => {
+    if (k === "C") digits = "";
+    else if (k === "⌫") digits = digits.slice(0, -1);
+    else if (digits.length < 8) digits = (digits + k).replace(/^0+/, "");
+    renderAmount();
+    checkReady();
+  };
+  $("pad").appendChild(b);
+});
+
+function renderAmount() {
+  const el = $("amount");
+  el.innerHTML = money(digits || 0) + "<span>฿</span>";
+  el.classList.toggle("zero", !digits);
+}
+
+function checkReady() {
+  $("saveBtn").disabled = !(cat && Number(digits) > 0);
+}
+
+function say(text, ok = true) {
+  const m = $("msg");
+  m.textContent = text;
+  m.className = ok ? "ok" : "err";
+  if (ok) setTimeout(() => { m.textContent = ""; }, 1800);
+}
+
+/* ═══ 7. บันทึก ═══ */
+$("saveBtn").onclick = async () => {
+  $("saveBtn").disabled = true;
+  const { error } = await db.from("records").insert([
+    { type, category: cat, amount: Number(digits) }
+  ]);
+
+  if (error) { say("❌ " + error.message, false); checkReady(); return; }
+
+  say(`✅ บันทึก ${cat} ${money(digits)} ฿ แล้ว`);
+  digits = ""; cat = null;
+  renderAmount(); renderCats(); checkReady();
+  loadRecords();
+};
+
+/* ═══ 8. ลบ ═══ */
+async function delRecord(id, name) {
+  if (!confirm(`ลบรายการ ${name} ?`)) return;
+  const { error } = await db.from("records").delete().eq("id", id);
+  if (error) return say("❌ " + error.message, false);
+  say("🗑 ลบแล้ว");
+  loadRecords();
+}
+
+/* ═══ 9. ดึงข้อมูล ═══ */
+async function loadRecords() {
+  const { data, error } = await db
+    .from("records").select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) return say("❌ โหลดข้อมูลไม่สำเร็จ: " + error.message, false);
+  cache = data || [];
+  render();
+}
+
+$("filter").onchange = render;
+
+function render() {
+  const now = new Date();
+  const rows = $("filter").value === "month"
+    ? cache.filter(r => {
+        const d = new Date(r.created_at);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+    : cache;
+
+  let inSum = 0, outSum = 0;
+  const ul = $("list");
+  ul.innerHTML = "";
+
+  if (!rows.length) {
+    ul.innerHTML = '<li class="empty">ยังไม่มีรายการ — เริ่มบันทึกได้เลย</li>';
+  }
+
+  rows.forEach(r => {
+    const amt = Number(r.amount);
+    const isIn = r.type === "income";
+    isIn ? inSum += amt : outSum += amt;
+
+    const d = new Date(r.created_at);
+    const when = d.toLocaleDateString("th-TH", { day: "numeric", month: "short" })
+               + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="cat">${r.category}<span class="date">${when}</span></div>
+      <div class="amt ${isIn ? "in" : "out"}">${isIn ? "+" : "−"}${money(amt)}</div>`;
+
+    const del = document.createElement("button");
+    del.className = "del";
+    del.textContent = "✕";
+    del.onclick = () => delRecord(r.id, r.category);
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+
+  $("sumIn").textContent   = money(inSum);
+  $("sumOut").textContent  = money(outSum);
+  $("balance").textContent = money(inSum - outSum) + " ฿";
+}
+
+/* ═══ 10. เริ่มทำงาน ═══ */
+setType("expense");
+renderAmount();
+loadRecords();
+</script>
+</body>
+</html>
