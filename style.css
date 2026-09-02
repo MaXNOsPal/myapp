@@ -26,8 +26,8 @@ body { font-family: system-ui, sans-serif; max-width:420px; margin:0 auto; paddi
 #list .amt.out { color:#dc2626; font-weight:600; }
 #list .del { border:none; background:none; color:#94a3b8; cursor:pointer; }
 .navLink {
-  display:block; text-align:center; margin:12px 0; padding:12px;
-  background:#fff; border-radius:12px; text-decoration:none;
-  color:#2563eb; font-weight:600; font-size:15px;
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  font-size: 20px;
 }
-
