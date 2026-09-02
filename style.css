@@ -1,0 +1,27 @@
+body { font-family: system-ui, sans-serif; max-width:420px; margin:0 auto; padding:16px; background:#f5f6f8; }
+.summary { background:#1e293b; color:#fff; border-radius:14px; padding:18px; text-align:center; }
+.balance { font-size:32px; font-weight:700; }
+.sub { display:flex; justify-content:space-around; margin-top:8px; font-size:14px; }
+.in b { color:#4ade80; } .out b { color:#f87171; }
+
+.tabs { display:flex; gap:8px; margin:14px 0; }
+.tabs button { flex:1; padding:12px; border:none; border-radius:10px; background:#e2e8f0; font-size:15px; cursor:pointer; }
+.tabs button.on { background:#334155; color:#fff; }
+
+.cats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.cats button { padding:14px 4px; border:1px solid #dde; border-radius:12px; background:#fff; font-size:14px; cursor:pointer; }
+.cats button.on { background:#2563eb; color:#fff; border-color:#2563eb; }
+
+.amount { text-align:right; font-size:36px; font-weight:700; margin:14px 0; padding:10px 14px; background:#fff; border-radius:12px; }
+.pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.pad button { padding:18px; font-size:20px; border:none; border-radius:12px; background:#fff; cursor:pointer; }
+.pad button:active { background:#dbeafe; }
+
+.save { width:100%; padding:16px; margin-top:12px; border:none; border-radius:12px; background:#16a34a; color:#fff; font-size:17px; cursor:pointer; }
+.save:disabled { background:#cbd5e1; }
+
+#list { list-style:none; padding:0; margin-top:18px; }
+#list li { display:flex; justify-content:space-between; align-items:center; background:#fff; padding:12px; border-radius:10px; margin-bottom:8px; }
+#list .amt.in { color:#16a34a; font-weight:600; }
+#list .amt.out { color:#dc2626; font-weight:600; }
+#list .del { border:none; background:none; color:#94a3b8; cursor:pointer; }
