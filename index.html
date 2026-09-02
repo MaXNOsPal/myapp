@@ -1,52 +1,21 @@
-<!DOCTYPE html>
+<div class="summary">
+  <div class="balance" id="balance">0 ฿</div>
+  <div class="sub">
+    <span class="in">รับ <b id="sumIn">0</b></span>
+    <span class="out">จ่าย <b id="sumOut">0</b></span>
+  </div>
+</div>
 
-<html lang="th">
+<div class="tabs">
+  <button id="tabOut" class="on">รายจ่าย</button>
+  <button id="tabIn">รายรับ</button>
+</div>
 
-<head>
+<div id="cats" class="cats"></div>
 
-  <meta charset="UTF-8">
+<div class="amount" id="amount">0</div>
+<div class="pad" id="pad"></div>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>My App</title>
-
-  <style>
-
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
-
-    input, button { padding: 10px; font-size: 16px; margin: 4px 0; }
-
-    input { width: 100%; box-sizing: border-box; }
-
-    li { padding: 8px; border-bottom: 1px solid #eee; }
-
-  </style>
-
-</head>
-
-<body>
-
-  <h1>รายการข้อมูล</h1>
-
-
-  <input id="name" placeholder="ชื่อ">
-
-  <input id="note" placeholder="รายละเอียด">
-
-  <button type="button" onclick="addItem()">เพิ่มข้อมูล</button>
-
-
-  <p id="msg"></p>
-
-  <ul id="list"></ul>
-
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script src="config.js"></script>
-
-  <script src="app.js"></script>
-
-</body>
-
-</html>
+<button id="saveBtn" class="save" disabled>บันทึก</button>
+<p id="msg"></p>
+<ul id="list"></ul>
