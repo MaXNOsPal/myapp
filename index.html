@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>บันทึกรายรับรายจ่าย</title>
-<a href="dashboard.html" class="navLink">📊 ดูสรุปภาพรวม</a>
+
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
@@ -93,14 +93,7 @@
 
 <h1>💸 บันทึกรายรับรายจ่าย</h1>
 
-<div class="summary">
-  <div class="label">คงเหลือ</div>
-  <div class="balance" id="balance">0 ฿</div>
-  <div class="sub">
-    <div class="in">รายรับ<b id="sumIn">0</b></div>
-    <div class="out">รายจ่าย<b id="sumOut">0</b></div>
-  </div>
-</div>
+
 
 <div class="tabs">
   <button id="tabOut" class="on">− รายจ่าย</button>
@@ -122,8 +115,16 @@
     <option value="all">ทั้งหมด</option>
   </select>
 </div>
+ <div class="summary">
+  <div class="label">คงเหลือ</div>
+  <div class="balance" id="balance">0 ฿</div>
+  <div class="sub">
+    <div class="in">รายรับ<b id="sumIn">0</b></div>
+    <div class="out">รายจ่าย<b id="sumOut">0</b></div>
+  </div>
+</div>
 <ul id="list"></ul>
-
+<a href="dashboard.html" class="navLink">📊 ดูสรุปภาพรวม</a>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ═══ 1. ตั้งค่า — แก้ 2 บรรทัดนี้ ═══ */
