@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — สรุปภาพรวม</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+    max-width: 460px; margin: 0 auto; padding: 16px 16px 40px;
+    background: #f1f5f9; color: #0f172a;
+  }
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .top a { text-decoration: none; color: #475569; font-size: 22px; }
+  .top h1 { font-size: 19px; margin: 0; flex: 1; }
+  select {
+    padding: 8px 10px; border-radius: 10px; border: 1px solid #cbd5e1;
+    background: #fff; font-size: 13px; font-family: inherit;
+  }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: #fff; border-radius: 14px; padding: 15px; }
+  .card .t { font-size: 12px; color: #64748b; }
+  .card .v { font-size: 21px; font-weight: 800; margin-top: 4px; }
+  .card.full { grid-column: span 2; background: #1e293b; color: #fff; text-align: center; }
+  .card.full .t { color: #94a3b8; }
+  .card.full .v { font-size: 32px; }
+  .green { color: #16a34a; } .red { color: #dc2626; }
+
+  .box { background: #fff; border-radius: 16px; padding: 16px; margin-top: 14px; }
+  .box h2 { font-size: 15px; margin: 0 0 12px; }
+  .chartWrap { position: relative; height: 240px; }
+
+  .rank { list-style: none; padding: 0; margin: 0; }
+  .rank li { margin-bottom: 13px; }
+  .rank .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
+  .rank .pct { color: #94a3b8; font-size: 12px; margin-left: 6px; }
+  .rank .bar { height: 7px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+  .rank .fill { height: 100%; border-radius: 4px; }
+
+  .btn {
+    display: block; width: 100%; margin-top: 14px; padding: 14px;
+    border: none; border-radius: 13px; background: #334155; color: #fff;
+    font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .empty { text-align: center; color: #94a3b8; padding: 30px 0; font-size: 14px; }
+  #msg { text-align: center; color: #dc2626; font-size: 14px; min-height: 18px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="index.html">←</a>
+  <h1>📊 สรุปภาพรวม</h1>
+  <select id="period"></select>
+</div>
+
+<p id="msg"></p>
+
+<div class="cards">
+  <div class="card full">
+    <div class="t">คงเหลือ</div>
+    <div class="v" id="cBal">0 ฿</div>
+  </div>
+  <div class="card">
+    <div class="t">รายรับ</div>
+    <div class="v green" id="cIn">0</div>
+  </div>
+  <div class="card">
+    <div class="t">รายจ่าย</div>
+    <div class="v red" id="cOut">0</div>
+  </div>
+  <div class="card">
+    <div class="t">จำนวนรายการ</div>
+    <div class="v" id="cCount">0</div>
+  </div>
+  <div class="card">
+    <div class="t">เฉลี่ย/รายการ</div>
+    <div class="v" id="cAvg">0</div>
+  </div>
+</div>
+
+<div class="box">
+  <h2>สัดส่วนรายจ่ายตามหมวด</h2>
+  <div class="chartWrap"><canvas id="pie"></canvas></div>
+</div>
+
+<div class="box">
+  <h2>เปรียบเทียบ 6 เดือนล่าสุด</h2>
+  <div class="chartWrap"><canvas id="bar"></canvas></div>
+</div>
+
+<div class="box">
+  <h2>หมวดที่จ่ายเยอะที่สุด</h2>
+  <ul class="rank" id="rank"></ul>
+</div>
+
+<button class="btn" id="csvBtn">⬇️ ดาวน์โหลด CSV</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+/* ═══ ตั้งค่า — ใส่ให้ตรงกับ index.html ═══ */
+const SUPABASE_URL = "https://xxxxxxxx.supabase.co";
+const SUPABASE_KEY = "your-anon-public-key";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const money = n => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
+const COLORS = ["#2563eb","#f59e0b","#10b981","#ef4444","#8b5cf6","#ec4899","#14b8a6","#f97316","#64748b","#0ea5e9"];
+
+let cache = [], pieChart = null, barChart = null;
+
+const keyOf   = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+const labelOf = k => {
+  const [y, m] = k.split("-");
+  return new Date(y, m - 1).toLocaleDateString("th-TH", { month: "short", year: "2-digit" });
+};
+
+/* ═══ โหลดข้อมูล ═══ */
+async function load() {
+  const { data, error } = await db.from("records")
+    .select("*").order("created_at", { ascending: false });
+
+  if (error) { $("msg").textContent = "❌ " + error.message; return; }
+  cache = data || [];
+  buildPeriods();
+  render();
+}
+
+/* ═══ สร้างตัวเลือกเดือน ═══ */
+function buildPeriods() {
+  const keys = [...new Set(cache.map(r => keyOf(new Date(r.created_at))))].sort().reverse();
+  $("period").innerHTML =
+    '<option value="all">ทั้งหมด</option>' +
+    keys.map(k => `<option value="${k}">${labelOf(k)}</option>`).join("");
+  if (keys.length) $("period").value = keys[0];
+}
+$("period").onchange = render;
+
+/* ═══ วาดทั้งหมด ═══ */
+function render() {
+  const sel = $("period").value;
+  const rows = sel === "all"
+    ? cache
+    : cache.filter(r => keyOf(new Date(r.created_at)) === sel);
+
+  let inSum = 0, outSum = 0;
+  const byCat = {};
+
+  rows.forEach(r => {
+    const amt = Number(r.amount);
+    if (r.type === "income") inSum += amt;
+    else {
+      outSum += amt;
+      byCat[r.category] = (byCat[r.category] || 0) + amt;
+    }
+  });
+
+  $("cIn").textContent    = money(inSum);
+  $("cOut").textContent   = money(outSum);
+  $("cBal").textContent   = money(inSum - outSum) + " ฿";
+  $("cCount").textContent = rows.length;
+  $("cAvg").textContent   = rows.length ? money(outSum / (rows.filter(r => r.type === "expense").length || 1)) : "0";
+
+  drawPie(byCat);
+  drawBar();
+  drawRank(byCat, outSum);
+}
+
+/* ═══ กราฟวงกลม ═══ */
+function drawPie(byCat) {
+  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  if (pieChart) pieChart.destroy();
+  if (!entries.length) return;
+
+  pieChart = new Chart($("pie"), {
+    type: "doughnut",
+    data: {
+      labels: entries.map(e => e[0]),
+      datasets: [{ data: entries.map(e => e[1]), backgroundColor: COLORS, borderWidth: 0 }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      cutout: "58%",
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 }, padding: 10 } },
+        tooltip: {
+          callbacks: {
+            label: c => {
+              const total = c.dataset.data.reduce((a, b) => a + b, 0);
+              return ` ${money(c.parsed)} ฿ (${(c.parsed / total * 100).toFixed(1)}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ═══ กราฟแท่ง 6 เดือน ═══ */
+function drawBar() {
+  const now = new Date();
+  const keys = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(keyOf(d));
+  }
+
+  const ins = {}, outs = {};
+  keys.forEach(k => { ins[k] = 0; outs[k] = 0; });
+
+  cache.forEach(r => {
+    const k = keyOf(new Date(r.created_at));
+    if (!(k in ins)) return;
+    const amt = Number(r.amount);
+    r.type === "income" ? ins[k] += amt : outs[k] += amt;
+  });
+
+  if (barChart) barChart.destroy();
+  barChart = new Chart($("bar"), {
+    type: "bar",
+    data: {
+      labels: keys.map(labelOf),
+      datasets: [
+        { label: "รายรับ", data: keys.map(k => ins[k]),  backgroundColor: "#16a34a", borderRadius: 5 },
+        { label: "รายจ่าย", data: keys.map(k => outs[k]), backgroundColor: "#ef4444", borderRadius: 5 }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${money(c.parsed.y)} ฿` } }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { ticks: { callback: v => money(v) }, grid: { color: "#f1f5f9" } }
+      }
+    }
+  });
+}
+
+/* ═══ อันดับหมวด ═══ */
+function drawRank(byCat, total) {
+  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const ul = $("rank");
+
+  if (!entries.length) { ul.innerHTML = '<li class="empty">ยังไม่มีรายจ่ายในช่วงนี้</li>'; return; }
+
+  ul.innerHTML = entries.map(([name, val], i) => {
+    const pct = total ? (val / total * 100) : 0;
+    return `<li>
+      <div class="row">
+        <span>${name}<span class="pct">${pct.toFixed(1)}%</span></span>
+        <b>${money(val)} ฿</b>
+      </div>
+      <div class="bar"><div class="fill" style="width:${pct}%;background:${COLORS[i % COLORS.length]}"></div></div>
+    </li>`;
+  }).join("");
+}
+
+/* ═══ Export CSV ═══ */
+$("csvBtn").onclick = () => {
+  if (!cache.length) return alert("ยังไม่มีข้อมูล");
+  const head = "วันที่,ประเภท,หมวด,จำนวนเงิน\n";
+  const body = cache.map(r =>
+    [new Date(r.created_at).toLocaleString("th-TH"),
+     r.type === "income" ? "รายรับ" : "รายจ่าย",
+     r.category, r.amount].join(",")
+  ).join("\n");
+
+  const blob = new Blob(["\uFEFF" + head + body], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `records_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+};
+
+load();
+</script>
+</body>
+</html>
