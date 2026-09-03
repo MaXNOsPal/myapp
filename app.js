@@ -58,8 +58,9 @@ function checkReady() {
 }
 
 // ── บันทึก ──
-const note = $("note").value.trim();
+
 $("saveBtn").onclick = async () => {
+  const note = $("note").value.trim();
   const { error } = await supabase.from("records").insert([{
     type, category: cat, amount: Number(digits),note: note || null
   }]);
