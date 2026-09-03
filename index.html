@@ -188,6 +188,9 @@ const CATS = {
 let type = "expense", cat = null, digits = "", cache = [];
 const $ = id => document.getElementById(id);
 const money = n => Number(n).toLocaleString("th-TH");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({   // ← เพิ่มตรงนี้
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
 
 /* ═══ 4. แท็บ ═══ */
 $("tabOut").onclick = () => setType("expense");
