@@ -242,14 +242,15 @@ function say(text, ok = true) {
 /* ═══ 7. บันทึก ═══ */
 $("saveBtn").onclick = async () => {
   $("saveBtn").disabled = true;
+ const note = $("note").value.trim(); 
   const { error } = await db.from("records").insert([
-    { type, category: cat, amount: Number(digits) }
+    { type, category: cat, amount: Number(digits),note: note || null }
   ]);
 
   if (error) { say("❌ " + error.message, false); checkReady(); return; }
 
   say(`✅ บันทึก ${cat} ${money(digits)} ฿ แล้ว`);
-  digits = ""; cat = null;
+  digits = ""; cat = null; note = null;
   renderAmount(); renderCats(); checkReady();
   loadRecords();
 };
