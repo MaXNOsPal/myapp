@@ -58,9 +58,10 @@ function checkReady() {
 }
 
 // ── บันทึก ──
+const note = $("note").value.trim();
 $("saveBtn").onclick = async () => {
   const { error } = await supabase.from("records").insert([{
-    type, category: cat, amount: Number(digits)
+    type, category: cat, amount: Number(digits),note: note || null
   }]);
 
   if (error) { $("msg").textContent = "❌ " + error.message; return; }
@@ -68,6 +69,7 @@ $("saveBtn").onclick = async () => {
   $("msg").textContent = "✅ บันทึกแล้ว";
   digits = ""; cat = null;
   $("amount").textContent = "0";
+  $("note").value = "";
   renderCats();
   checkReady();
   loadRecords();
