@@ -107,6 +107,9 @@ textarea.inp { resize: vertical; }
   li .del { border: none; background: none; color: #cbd5e1; font-size: 19px; cursor: pointer; padding: 0 2px; }
   li .del:active { color: #dc2626; }
   .empty { text-align: center; color: #94a3b8; padding: 26px 0; font-size: 14px; }
+  li.innerHTML =
+  `<div class="cat">${r.category}<span class="date">${when}</span>${note}</div>
+   <div class="amt ${isIn ? "in" : "out"}">${isIn ? "+" : "−"}${money(amt)}</div>`;
 </style>
 </head>
 <body>
@@ -288,6 +291,9 @@ function render() {
 
   let inSum = 0, outSum = 0;
   const ul = $("list");
+  const note = r.note
+  ? `<div class="note">${esc(r.note)}</div>`
+  : "";
   ul.innerHTML = "";
 
   if (!rows.length) {
