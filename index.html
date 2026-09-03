@@ -6,12 +6,8 @@
 <title>บันทึกรายรับรายจ่าย</title>
 
 <style>
- .note{
-  font-size:13px;
-  color:#6b7280;
-  margin-top:3px;
-  line-height:1.35;
-  word-break:break-word;
+ .note{ font-size:13px; color:#6b7280; margin-top:3px; word-break:break-word; }
+
 }
 
  .inp {
@@ -309,7 +305,7 @@ function render() {
 
   rows.forEach(r => {
     const amt = Number(r.amount);
-   const note = r.note                                  // ← ย้ายมาตรงนี้
+    const note = r.note                                  // ← ย้ายมาตรงนี้
 
     ? `<div class="note">${esc(r.note)}</div>`
 
@@ -323,7 +319,7 @@ function render() {
 
     const li = document.createElement("li");
     li.innerHTML = `
-      <div class="cat">${r.category}<span class="date">${when}</span></div>
+      <div class="cat">${r.category}<span class="date">${when}</span>${note}</div>
       <div class="amt ${isIn ? "in" : "out"}">${isIn ? "+" : "−"}${money(amt)}</div>`;
 
     const del = document.createElement("button");
