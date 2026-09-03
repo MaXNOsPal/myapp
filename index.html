@@ -299,17 +299,18 @@ function render() {
 
   let inSum = 0, outSum = 0;
   const ul = $("list");
-  const note = r.note
-  ? `<div class="note">${esc(r.note)}</div>`
-  : "";
   ul.innerHTML = "";
-
   if (!rows.length) {
     ul.innerHTML = '<li class="empty">ยังไม่มีรายการ — เริ่มบันทึกได้เลย</li>';
   }
 
   rows.forEach(r => {
     const amt = Number(r.amount);
+   const note = r.note                                  // ← ย้ายมาตรงนี้
+
+    ? `<div class="note">${esc(r.note)}</div>`
+
+    : "";
     const isIn = r.type === "income";
     isIn ? inSum += amt : outSum += amt;
 
