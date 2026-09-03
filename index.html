@@ -250,7 +250,7 @@ $("saveBtn").onclick = async () => {
   if (error) { say("❌ " + error.message, false); checkReady(); return; }
 
   say(`✅ บันทึก ${cat} ${money(digits)} ฿ แล้ว`);
-  digits = ""; cat = null; note = null;
+  digits = ""; cat = null; $("note").value = "";
   renderAmount(); renderCats(); checkReady();
   loadRecords();
 };
