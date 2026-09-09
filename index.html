@@ -43,7 +43,7 @@ textarea{
   word-break:break-word;
 }
 
-}
+
 
  .inp {
   width: 100%;
@@ -54,6 +54,7 @@ textarea{
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
+  margin-top: 12px;
   margin-bottom: 10px;
 }
 .inp:focus { border-color: #2563eb; }
@@ -68,7 +69,7 @@ textarea.inp { resize: vertical; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     font-family: -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
-    max-width: 440px; margin: 0 auto; padding: 16px 16px 40px;
+    max-width: 440px; margin: 0 auto; padding: 32px 16px 40px;
     background: var(--bg); color: var(--text);
   }
   h1 { font-size: 20px; text-align: center; margin: 4px 0 14px; }
@@ -130,9 +131,9 @@ textarea.inp { resize: vertical; }
   #msg.ok  { color: #16a34a; }
 
   /* รายการ */
-  .listHead { display: flex; justify-content: space-between; align-items: center; margin: 22px 0 10px; }
+  .listHead { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin: 22px 0 10px; }
   .listHead h2 { font-size: 16px; margin: 0; }
-  .listHead select { padding: 7px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; font-size: 13px; }
+  .listHead select { width: auto; justify-self: end; padding: 7px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; font-size: 13px; }
   ul { list-style: none; padding: 0; margin: 0; }
   li {
     display: flex; align-items: center; gap: 10px;
@@ -146,9 +147,6 @@ textarea.inp { resize: vertical; }
   li .del { border: none; background: none; color: #cbd5e1; font-size: 19px; cursor: pointer; padding: 0 2px; }
   li .del:active { color: #dc2626; }
   .empty { text-align: center; color: #94a3b8; padding: 26px 0; font-size: 14px; }
-  li.innerHTML =
-  `<div class="cat">${r.category}<span class="date">${when}</span>${note}</div>
-   <div class="amt ${isIn ? "in" : "out"}">${isIn ? "+" : "−"}${money(amt)}</div>`;
 </style>
 </head>
 <body>
@@ -166,6 +164,8 @@ textarea.inp { resize: vertical; }
 
 <div class="amount zero" id="amount">0<span>฿</span></div>
 <div class="pad" id="pad"></div>
+<div >
+ 
 <input
 
   type="text"
@@ -181,6 +181,7 @@ textarea.inp { resize: vertical; }
   autocomplete="off"
 
 />
+</div>
 <button class="save" id="saveBtn" disabled>บันทึก</button>
 <p id="msg"></p>
 
