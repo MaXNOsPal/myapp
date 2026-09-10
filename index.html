@@ -131,9 +131,32 @@ textarea.inp { resize: vertical; }
   #msg.ok  { color: #16a34a; }
 
   /* รายการ */
-  .listHead { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin: 22px 0 10px; }
+  .listHead { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1px; margin: 10px 0 1px; }
   .listHead h2 { font-size: 16px; margin: 0; }
   .listHead select { width: auto; justify-self: end; padding: 7px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; font-size: 13px; }
+  /* filepath: c:\Users\adokmai.KUL-DC\OneDrive - DPDHL\Documents\GitHub\myapp\index.html */
+  .week-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .week-filter button {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 7px;
+    background: #e2e8f0;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .week-filter span {
+    min-width: 75px;
+    text-align: center;
+    font-size: 13px;
+  }
   ul { list-style: none; padding: 0; margin: 0; }
   li {
     display: flex; align-items: center; gap: 10px;
@@ -187,11 +210,14 @@ textarea.inp { resize: vertical; }
 
 <div class="listHead">
   <h2>รายการล่าสุด</h2>
- <a href="dashboard.html" class="navLink" title="ดูสรุปภาพรวม">📊</a>
-  <select id="filter">
-    <option value="month">เดือนนี้</option>
-    <option value="all">ทั้งหมด</option>
-  </select>
+
+  <a href="dashboard.html" class="navLink" title="ดูสรุปภาพรวม">📊</a>
+
+  <div class="week-filter">
+    <button id="prevWeek">‹</button>
+    <span id="weekLabel">อาทิตย์นี้</span>
+    <button id="nextWeek">›</button>
+  </div>
 </div>
  <div class="summary">
   <div class="label">คงเหลือ</div>
@@ -217,7 +243,7 @@ const CATS = {
 };
 
 /* ═══ 3. สถานะ ═══ */
-let type = "expense", cat = null, digits = "", cache = [];
+let type = "expense", cat = null, digits = "", cache = [], weekOffset = 0;
 const $ = id => document.getElementById(id);
 const money = n => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 });
 const esc = s => String(s).replace(/[&<>"']/g, c => ({   // ← เพิ่มตรงนี้
@@ -346,16 +372,42 @@ async function loadRecords() {
   render();
 }
 
-$("filter").onchange = render;
+$("prevWeek").onclick = () => {
+  weekOffset--;
+  render();
+};
 
+$("nextWeek").onclick = () => {
+  if (weekOffset < 0) {
+    weekOffset++;
+    render();
+  }
+};
+
+// filepath: c:\Users\adokmai.KUL-DC\OneDrive - DPDHL\Documents\GitHub\myapp\index.html
 function render() {
   const now = new Date();
-  const rows = $("filter").value === "month"
-    ? cache.filter(r => {
-        const d = new Date(r.created_at);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      })
-    : cache;
+
+  const weekStart = new Date(now);
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(
+    weekStart.getDate() - weekStart.getDay() + weekOffset * 7
+  );
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  $("weekLabel").textContent =
+    weekOffset === 0
+      ? "อาทิตย์นี้"
+      : weekOffset === -1
+        ? "อาทิตย์ที่แล้ว"
+        : `${Math.abs(weekOffset)} อาทิตย์ก่อน`;
+
+  const rows = cache.filter(r => {
+    const d = new Date(r.created_at);
+    return d >= weekStart && d < weekEnd;
+  });
 
   let inSum = 0, outSum = 0;
   const ul = $("list");
