@@ -233,7 +233,12 @@ textarea.inp { resize: vertical; }
   autocomplete="off"
 
 />
-<input type="file" id="photo" accept="image/*" capture="environment">
+<input type="file" id="photo"    accept="image/*" hidden>
+<input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
+
+<button onclick="$('photo').click()">🖼️ เลือกสลิป</button>
+
+<button onclick="$('photoCam').click()">📷 ถ่ายภาพ</button>
 </div>
 <button class="save" id="saveBtn" disabled>บันทึก</button>
 <p id="msg"></p>
@@ -373,7 +378,8 @@ $("saveBtn").onclick = async () => {
  const note = $("note").value.trim(); 
  let imageUrl = null;
 
-const file = $("photo").files[0];
+const file = $("photo").files[0] || $("photoCam").files[0];
+
 
 
 if (file) {
@@ -405,7 +411,8 @@ if (file) {
 
   say(`✅ บันทึก ${cat} ${money(digits)} ฿ แล้ว`);
   digits = ""; cat = null; $("note").value = "";
-  $("photo").value = "";
+  $("photo").value = ""; $("photoCam").value = "";
+
   renderAmount(); renderCats(); checkReady();
   loadRecords();
 };
