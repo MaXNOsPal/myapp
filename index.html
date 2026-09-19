@@ -164,7 +164,7 @@ textarea.inp { resize: vertical; }
   #msg.ok  { color: #16a34a; }
 
   /* รายการ */
-  .listHead { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1px; margin: 10px 0 1px; }
+  .listHead { display: grid; grid-template-columns: 2fr 1fr 1fr auto; align-items: center; gap: 1px; margin: 10px 0 1px; }
   .listHead h2 { font-size: 16px; margin: 0; }
   .listHead select { width: auto; justify-self: end; padding: 7px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; font-size: 13px; }
   /* filepath: c:\Users\adokmai.KUL-DC\OneDrive - DPDHL\Documents\GitHub\myapp\index.html */
@@ -267,12 +267,13 @@ textarea.inp { resize: vertical; }
   <h2>รายการล่าสุด</h2>
 
   <a href="dashboard.html" class="navLink" title="ดูสรุปภาพรวม">📊</a>
+  <a href="want.html" class="navLink" title="รายการสิ่งที่อยากได้">✍</a>
 
-  <div class="week-filter">
-    <button id="prevWeek">‹</button>
-    <span id="weekLabel">อาทิตย์นี้</span>
-    <button id="nextWeek">›</button>
-  </div>
+<div class="week-filter"><button id="prevWeek">‹</button>
+  <span id="weekLabel">อาทิตย์นี้</span>
+  <button id="nextWeek">›</button>
+</div>
+  
 </div>
  <div class="summary">
   <div class="label">คงเหลือ</div>
