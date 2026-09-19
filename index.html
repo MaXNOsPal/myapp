@@ -120,6 +120,39 @@ textarea.inp { resize: vertical; }
   .pad button:active { background: #dbeafe; transform: scale(.96); }
   .pad .fn { color: #64748b; font-size: 19px; }
 
+    .upload-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .upload-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 48px;
+      padding: 11px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+
+    .upload-btn:first-of-type {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .upload-btn:hover { background: #e0f2fe; border-color: #60a5fa; }
+    .upload-btn:active { transform: scale(.97); }
+
   .save {
     width: 100%; padding: 17px; margin-top: 12px; border: none; border-radius: 14px;
     background: #16a34a; color: #ffffff; font-size: 20px; font-weight: 700; cursor: pointer;
@@ -216,35 +249,16 @@ textarea.inp { resize: vertical; }
 
 <div class="amount zero" id="amount">0<span>฿</span></div>
 <div class="pad" id="pad"></div>
-<div >
- 
-<input
-
-  type="text"
-
-  id="note"
-
-  class="inp"
-
-  placeholder="โน้ต / รายละเอียด (ไม่บังคับ)"
-
-  maxlength="120"
-
-  autocomplete="off"
-
-/>
-<input
-  type="file"
-  id="imageInput"
-  accept="image/*"
-  capture="environment"
->
+<div>
+<input type="text" id="note" class="inp" placeholder="โน้ต / รายละเอียด (ไม่บังคับ)" maxlength="120" autocomplete="off"/>
+</div>
+<div class="upload-actions">
 <input type="file" id="photo"    accept="image/*" hidden>
 <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
 
-<button onclick="$('photo').click()">🖼️ เลือกสลิป</button>
+<button class="upload-btn" type="button" onclick="$('photo').click()">🖼️ เลือกสลิป</button>
 
-<button onclick="$('photoCam').click()">📷 ถ่ายภาพ</button>
+<button class="upload-btn" type="button" onclick="$('photoCam').click()">📷 ถ่ายภาพ</button>
 </div>
 <button class="save" id="saveBtn" disabled>บันทึก</button>
 <p id="msg"></p>
