@@ -233,6 +233,12 @@ textarea.inp { resize: vertical; }
   autocomplete="off"
 
 />
+<input
+  type="file"
+  id="imageInput"
+  accept="image/*"
+  capture="environment"
+>
 <input type="file" id="photo"    accept="image/*" hidden>
 <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
 
@@ -262,6 +268,10 @@ textarea.inp { resize: vertical; }
     <div class="out">รายจ่าย<b id="sumOut">0</b></div>
   </div>
   <div id="lightbox"><img id="lightboxImg" alt=""></div>
+  <div class="image-preview">
+  <img id="previewImage" alt="ตัวอย่างภาพ" hidden>
+  <span id="previewText">ยังไม่มีภาพ</span>
+</div>
 </div>
 <ul id="list"></ul>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
