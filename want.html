@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>รายการสิ่งที่อยากได้</title>
+	<style>
+		:root { --primary: #6d5dfc; --ink: #25243a; --muted: #77758a; --line: #e8e6f2; }
+		* { box-sizing: border-box; }
+		body { margin: 0; min-height: 100vh; font-family: Arial, sans-serif; color: var(--ink); background: #f7f6fc; }
+		.container { width: min(920px, 92%); margin: 0 auto; padding: 48px 0; }
+		header { text-align: center; margin-bottom: 28px; }
+		h1 { margin: 0 0 8px; font-size: clamp(2rem, 5vw, 3rem); }
+		header p { margin: 0; color: var(--muted); }
+		.panel { background: white; border: 1px solid var(--line); border-radius: 18px; padding: 24px; box-shadow: 0 8px 28px #332b7410; }
+		form { display: grid; grid-template-columns: 1.4fr .8fr 1.5fr auto; gap: 12px; align-items: end; }
+		label { display: block; font-size: .86rem; font-weight: bold; margin-bottom: 7px; }
+		input { width: 100%; padding: 12px 13px; border: 1px solid #dcd9e9; border-radius: 10px; font: inherit; outline: none; }
+		input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px #6d5dfc1c; }
+		button { border: 0; border-radius: 10px; padding: 13px 18px; color: white; background: var(--primary); font-weight: bold; cursor: pointer; white-space: nowrap; }
+		button:hover { filter: brightness(.94); }
+		.summary { display: flex; justify-content: space-between; align-items: center; margin: 28px 0 14px; }
+		h2 { margin: 0; font-size: 1.25rem; }
+		#count { color: var(--muted); font-size: .9rem; }
+		#items { display: grid; gap: 12px; }
+		.item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 18px; background: white; border: 1px solid var(--line); border-radius: 13px; }
+		.item h3 { margin: 0 0 6px; font-size: 1.05rem; }
+		.price { color: var(--primary); font-weight: bold; }
+		.item a { color: #4c43c7; font-size: .9rem; text-decoration: none; margin-left: 12px; }
+		.delete { background: transparent; color: #c34861; padding: 7px 9px; }
+		.empty { padding: 35px; text-align: center; color: var(--muted); background: white; border: 1px dashed #d9d5e8; border-radius: 13px; }
+		@media (max-width: 700px) { form { grid-template-columns: 1fr 1fr; } form .wide { grid-column: 1 / -1; } form button { width: 100%; } .item { align-items: flex-start; } }
+	</style>
+</head>
+<body>
+	<main class="container">
+		<header>
+			<h1>สิ่งที่อยากได้</h1>
+			<p>เก็บรายการของที่อยากซื้อไว้ในที่เดียว</p>
+		</header>
+
+		<section class="panel">
+			<form id="wishForm">
+				<div class="wide"><label for="name">สิ่งของที่อยากได้</label><input id="name" required placeholder="เช่น หูฟังไร้สาย" /></div>
+				<div><label for="price">ราคาโดยประมาณ</label><input id="price" type="number" min="0" step="0.01" placeholder="0" /></div>
+				<div><label for="link">ลิ้งสั่งซื้อ</label><input id="link" type="url" placeholder="https://..." /></div>
+				<button type="submit">+ เพิ่มรายการ</button>
+			</form>
+		</section>
+
+		<div class="summary"><h2>รายการของฉัน</h2><span id="count"></span></div>
+		<section id="items"></section>
+	</main>
+	<script>
+		const form = document.querySelector('#wishForm');
+		const items = document.querySelector('#items');
+		const count = document.querySelector('#count');
+		let wishes = JSON.parse(localStorage.getItem('wishes') || '[]');
+
+		function render() {
+			count.textContent = `${wishes.length} รายการ`;
+			items.innerHTML = wishes.length ? wishes.map((wish, index) => `
+				<article class="item">
+					<div><h3>${escapeHtml(wish.name)}</h3><span class="price">${wish.price ? Number(wish.price).toLocaleString('th-TH') + ' บาท' : 'ไม่ระบุราคา'}</span>${wish.link ? ` <a href="${escapeHtml(wish.link)}" target="_blank" rel="noopener">ดูร้านค้า ↗</a>` : ''}</div>
+					<button class="delete" onclick="removeWish(${index})" aria-label="ลบรายการ">ลบ</button>
+				</article>`).join('') : '<div class="empty">ยังไม่มีรายการ ลองเพิ่มสิ่งของที่อยากได้รายการแรกเลย</div>';
+		}
+		function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
+		function removeWish(index) { wishes.splice(index, 1); save(); }
+		function save() { localStorage.setItem('wishes', JSON.stringify(wishes)); render(); }
+		form.addEventListener('submit', event => { event.preventDefault(); wishes.unshift({ name: name.value.trim(), price: price.value, link: link.value.trim() }); save(); form.reset(); name.focus(); });
+		render();
+	</script>
+</body>
+</html>
