@@ -22,6 +22,8 @@
 		.summary { display: flex; justify-content: space-between; align-items: center; margin: 28px 0 14px; }
 		h2 { margin: 0; font-size: 1.25rem; }
 		#count { color: var(--muted); font-size: .9rem; }
+		#status { min-height: 20px; margin: 10px 0 0; color: var(--muted); font-size: .9rem; }
+		#status.error { color: #c34861; }
 		#items { display: grid; gap: 12px; }
 		.item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 18px; background: white; border: 1px solid var(--line); border-radius: 13px; }
 		.item h3 { margin: 0 0 6px; font-size: 1.05rem; }
@@ -49,27 +51,70 @@
 		</section>
 
 		<div class="summary"><h2>รายการของฉัน</h2><span id="count"></span></div>
+		<p id="status" role="status"></p>
 		<section id="items"></section>
 	</main>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="config.js"></script>
 	<script>
 		const form = document.querySelector('#wishForm');
 		const items = document.querySelector('#items');
 		const count = document.querySelector('#count');
-		let wishes = JSON.parse(localStorage.getItem('wishes') || '[]');
+		const status = document.querySelector('#status');
+		const nameInput = document.querySelector('#name');
+		const priceInput = document.querySelector('#price');
+		const linkInput = document.querySelector('#link');
+		const SUPABASE_URL = "https://onjvnijtotxnnecxfgvk.supabase.co";
+		const SUPABASE_KEY = "sb_publishable_QihvN4zm6Fwq-lso7UZH7g_fqgXnLnt";
+		const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+		let wishes = [];
 
 		function render() {
 			count.textContent = `${wishes.length} รายการ`;
 			items.innerHTML = wishes.length ? wishes.map((wish, index) => `
 				<article class="item">
 					<div><h3>${escapeHtml(wish.name)}</h3><span class="price">${wish.price ? Number(wish.price).toLocaleString('th-TH') + ' บาท' : 'ไม่ระบุราคา'}</span>${wish.link ? ` <a href="${escapeHtml(wish.link)}" target="_blank" rel="noopener">ดูร้านค้า ↗</a>` : ''}</div>
-					<button class="delete" onclick="removeWish(${index})" aria-label="ลบรายการ">ลบ</button>
+					<button class="delete" onclick="removeWish('${wish.id}')" aria-label="ลบรายการ">ลบ</button>
 				</article>`).join('') : '<div class="empty">ยังไม่มีรายการ ลองเพิ่มสิ่งของที่อยากได้รายการแรกเลย</div>';
 		}
 		function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
-		function removeWish(index) { wishes.splice(index, 1); save(); }
-		function save() { localStorage.setItem('wishes', JSON.stringify(wishes)); render(); }
-		form.addEventListener('submit', event => { event.preventDefault(); wishes.unshift({ name: name.value.trim(), price: price.value, link: link.value.trim() }); save(); form.reset(); name.focus(); });
-		render();
+		function showError(message) { status.textContent = `เชื่อมต่อ Supabase ไม่สำเร็จ: ${message}`; status.className = 'error'; }
+
+		async function loadWishes() {
+			const { data, error } = await db.from('wishes').select('id, name, price, link, created_at').order('created_at', { ascending: false });
+			if (error) { showError(error.message); return; }
+			wishes = data || [];
+			status.textContent = 'เชื่อมต่อ Supabase แล้ว';
+			status.className = '';
+			render();
+		}
+
+		async function removeWish(id) {
+			if (!confirm('ลบรายการนี้หรือไม่?')) return;
+			const { error } = await db.from('wishes').delete().eq('id', id);
+			if (error) { showError(error.message); return; }
+			await loadWishes();
+		}
+
+		form.addEventListener('submit', async event => {
+			event.preventDefault();
+			const button = form.querySelector('button[type="submit"]');
+			button.disabled = true;
+			status.textContent = 'กำลังบันทึก...';
+			status.className = '';
+			const { error } = await db.from('wishes').insert({
+				name: nameInput.value.trim(),
+				price: priceInput.value ? Number(priceInput.value) : null,
+				link: linkInput.value.trim() || null
+			});
+			button.disabled = false;
+			if (error) { showError(error.message); return; }
+			form.reset();
+			nameInput.focus();
+			await loadWishes();
+		});
+
+		loadWishes();
 	</script>
 </body>
 </html>
