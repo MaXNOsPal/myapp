@@ -31,7 +31,16 @@
 		.item a { color: #4c43c7; font-size: .9rem; text-decoration: none; margin-left: 12px; }
 		.delete { background: transparent; color: #c34861; padding: 7px 9px; }
 		.empty { padding: 35px; text-align: center; color: var(--muted); background: white; border: 1px dashed #d9d5e8; border-radius: 13px; }
-		@media (max-width: 700px) { form { grid-template-columns: 1fr 1fr; } form .wide { grid-column: 1 / -1; } form button { width: 100%; } .item { align-items: flex-start; } }
+		.modal { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+		.modal.hidden { display: none; }
+		.modal-card { width: min(520px, 100%); background: white; border-radius: 18px; padding: 24px; box-shadow: 0 20px 45px rgba(15, 23, 42, .18); }
+		.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+		.modal-head h3 { margin: 0; font-size: 1.2rem; }
+		.close-btn { background: #e2e8f0; color: #334155; padding: 8px 10px; }
+		.modal-form { display: grid; gap: 14px; }
+		.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+		.modal-actions .ghost { background: #e2e8f0; color: #334155; }
+		@media (max-width: 700px) { form { grid-template-columns: 1fr 1fr; } form .wide { grid-column: 1 / -1; } form button { width: 100%; } .item { align-items: flex-start; } .modal-actions { flex-direction: column-reverse; } .modal-actions button { width: 100%; } }
 	</style>
 </head>
 <body>
@@ -43,12 +52,10 @@
 
 		<section class="panel">
 			<form id="wishForm">
-				<input id="wishId" type="hidden" />
 				<div class="wide"><label for="name">สิ่งของที่อยากได้</label><input id="name" required placeholder="เช่น หูฟังไร้สาย" /></div>
 				<div><label for="price">ราคาโดยประมาณ</label><input id="price" type="number" min="0" step="0.01" placeholder="0" /></div>
 				<div><label for="link">ลิ้งสั่งซื้อ</label><input id="link" type="url" placeholder="https://..." /></div>
-				<button type="submit" id="submitWishBtn">+ เพิ่มรายการ</button>
-				<button type="button" id="cancelEditBtn" style="display:none; background:#e2e8f0; color:#334155;">ยกเลิก</button>
+				<button type="submit">+ เพิ่มรายการ</button>
 			</form>
 		</section>
 
@@ -56,6 +63,34 @@
 		<p id="status" role="status"></p>
 		<section id="items"></section>
 	</main>
+
+	<div id="editModal" class="modal hidden" aria-hidden="true">
+		<div class="modal-card">
+			<div class="modal-head">
+				<h3>แก้ไขรายการ</h3>
+				<button type="button" class="close-btn" id="closeEditModal">ปิด</button>
+			</div>
+			<form id="editForm" class="modal-form">
+				<input id="editWishId" type="hidden" />
+				<div>
+					<label for="editName">สิ่งของที่อยากได้</label>
+					<input id="editName" required />
+				</div>
+				<div>
+					<label for="editPrice">ราคาโดยประมาณ</label>
+					<input id="editPrice" type="number" min="0" step="0.01" />
+				</div>
+				<div>
+					<label for="editLink">ลิ้งสั่งซื้อ</label>
+					<input id="editLink" type="url" />
+				</div>
+				<div class="modal-actions">
+					<button type="button" class="ghost" id="cancelEditModal">ยกเลิก</button>
+					<button type="submit">บันทึกการแก้ไข</button>
+				</div>
+			</form>
+		</div>
+	</div>
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 	<script src="config.js"></script>
 	<script>
@@ -66,9 +101,12 @@
 		const nameInput = document.querySelector('#name');
 		const priceInput = document.querySelector('#price');
 		const linkInput = document.querySelector('#link');
-		const wishIdInput = document.querySelector('#wishId');
-		const submitWishBtn = document.querySelector('#submitWishBtn');
-		const cancelEditBtn = document.querySelector('#cancelEditBtn');
+		const modal = document.querySelector('#editModal');
+		const editForm = document.querySelector('#editForm');
+		const editWishIdInput = document.querySelector('#editWishId');
+		const editNameInput = document.querySelector('#editName');
+		const editPriceInput = document.querySelector('#editPrice');
+		const editLinkInput = document.querySelector('#editLink');
 		const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 		let wishes = [];
 
@@ -78,34 +116,26 @@
 				<article class="item">
 					<div><h3>${escapeHtml(wish.name)}</h3><span class="price">${wish.price ? Number(wish.price).toLocaleString('th-TH') + ' บาท' : 'ไม่ระบุราคา'}</span>${wish.link ? ` <a href="${escapeHtml(wish.link)}" target="_blank" rel="noopener">ดูร้านค้า ↗</a>` : ''}</div>
 					<div>
-						<button type="button" class="edit" onclick="editWish('${wish.id}')" aria-label="แก้ไขรายการ" style="background:#e0e7ff; color:#312e81; margin-right:8px;">แก้ไข</button>
-						<button type="button" class="delete" onclick="removeWish('${wish.id}')" aria-label="ลบรายการ">ลบ</button>
+						<button type="button" class="edit" data-id="${wish.id}" onclick="editWish('${wish.id}')" aria-label="แก้ไขรายการ" style="background:#e0e7ff; color:#312e81; margin-right:8px;">แก้ไข</button>
+						<button type="button" class="delete" data-id="${wish.id}" onclick="removeWish('${wish.id}')" aria-label="ลบรายการ">ลบ</button>
 					</div>
 				</article>`).join('') : '<div class="empty">ยังไม่มีรายการ ลองเพิ่มสิ่งของที่อยากได้รายการแรกเลย</div>';
 		}
 		function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
 		function showError(message) { status.textContent = `เชื่อมต่อ Supabase ไม่สำเร็จ: ${message}`; status.className = 'error'; }
-		function resetForm() {
-			form.reset();
-			wishIdInput.value = '';
-			submitWishBtn.textContent = '+ เพิ่มรายการ';
-			cancelEditBtn.style.display = 'none';
+		function closeEditModal() {
+			modal.classList.add('hidden');
+			modal.setAttribute('aria-hidden', 'true');
+			editForm.reset();
 		}
-		function startEdit(wish) {
-			wishIdInput.value = wish.id;
-			nameInput.value = wish.name;
-			priceInput.value = wish.price ?? '';
-			linkInput.value = wish.link ?? '';
-			submitWishBtn.textContent = '💾 บันทึกการแก้ไข';
-			cancelEditBtn.style.display = 'inline-block';
-			nameInput.focus();
-			status.textContent = 'กำลังแก้ไขรายการ...';
-			status.className = '';
-		}
-		function cancelEdit() {
-			resetForm();
-			status.textContent = 'ยกเลิกการแก้ไข';
-			status.className = '';
+		function openEditModal(wish) {
+			editWishIdInput.value = wish.id;
+			editNameInput.value = wish.name;
+			editPriceInput.value = wish.price ?? '';
+			editLinkInput.value = wish.link ?? '';
+			modal.classList.remove('hidden');
+			modal.setAttribute('aria-hidden', 'false');
+			setTimeout(() => editNameInput.focus(), 50);
 		}
 
 		async function loadWishes() {
@@ -118,18 +148,33 @@
 		}
 
 		async function removeWish(id) {
+			const normalizedId = String(id);
 			if (!confirm('ลบรายการนี้หรือไม่?')) return;
-			const { error } = await db.from('wishes').delete().eq('id', id);
+			const { error } = await db.from('wishes').delete().eq('id', normalizedId);
 			if (error) { showError(error.message); return; }
-			if (wishIdInput.value === id) resetForm();
 			await loadWishes();
 		}
 
 		async function editWish(id) {
-			const wish = wishes.find(item => item.id === id);
+			const normalizedId = String(id);
+			const wish = wishes.find(item => String(item.id) === normalizedId);
 			if (!wish) return;
-			startEdit(wish);
+			openEditModal(wish);
 		}
+
+		items.addEventListener('click', async (event) => {
+			const editButton = event.target.closest('.edit');
+			const deleteButton = event.target.closest('.delete');
+			if (editButton) {
+				const id = editButton.dataset.id;
+				if (id) editWish(id);
+				return;
+			}
+			if (deleteButton) {
+				const id = deleteButton.dataset.id;
+				if (id) await removeWish(id);
+			}
+		});
 
 		form.addEventListener('submit', async event => {
 			event.preventDefault();
@@ -137,28 +182,38 @@
 			button.disabled = true;
 			status.textContent = 'กำลังบันทึก...';
 			status.className = '';
-
-			const payload = {
+			const { error } = await db.from('wishes').insert({
 				name: nameInput.value.trim(),
 				price: priceInput.value ? Number(priceInput.value) : null,
 				link: linkInput.value.trim() || null
-			};
-
-			let result;
-			if (wishIdInput.value) {
-				result = await db.from('wishes').update(payload).eq('id', wishIdInput.value);
-			} else {
-				result = await db.from('wishes').insert(payload);
-			}
-
+			});
 			button.disabled = false;
-			if (result.error) { showError(result.error.message); return; }
-			resetForm();
+			if (error) { showError(error.message); return; }
+			form.reset();
 			nameInput.focus();
 			await loadWishes();
 		});
 
-		cancelEditBtn.addEventListener('click', cancelEdit);
+		editForm.addEventListener('submit', async event => {
+			event.preventDefault();
+			const id = editWishIdInput.value;
+			if (!id) return;
+			const payload = {
+				name: editNameInput.value.trim(),
+				price: editPriceInput.value ? Number(editPriceInput.value) : null,
+				link: editLinkInput.value.trim() || null
+			};
+			const { error } = await db.from('wishes').update(payload).eq('id', id);
+			if (error) { showError(error.message); return; }
+			closeEditModal();
+			await loadWishes();
+		});
+
+		document.querySelector('#closeEditModal').addEventListener('click', closeEditModal);
+		document.querySelector('#cancelEditModal').addEventListener('click', closeEditModal);
+		modal.addEventListener('click', (event) => {
+			if (event.target === modal) closeEditModal();
+		});
 		loadWishes();
 	</script>
 </body>
